@@ -1,5 +1,6 @@
 from app.database import create_db_and_tables, get_session
 from app.models import User, Question
+from sqlmodel import select
 
 
 TOPICS = [
@@ -56,6 +57,13 @@ ESSAY = [
 
 
 def add_question(session, level, qtype, question, options=None, correct="A"):
+    existing = session.exec(
+        select(Question).where(Question.question == question)
+    ).first()
+
+    if existing:
+        return
+
     options = options or ["", "", "", ""]
     session.add(
         Question(
@@ -76,10 +84,15 @@ def run():
     create_db_and_tables()
     session = next(get_session())
 
-    session.query(User).delete()
-    session.query(Question).delete()
+    user = session.exec(
+        select(User).where(User.username == "nimda")
+    ).first()
 
-    session.add(User(username="nimda", password="nimdaa"))
+    if user:
+        user.password = "nimdaa"
+        session.add(user)
+    else:
+        session.add(User(username="nimda", password="nimdaa"))
 
     letters = ["A", "B", "C", "D"]
 
@@ -108,10 +121,9 @@ def run():
     session.commit()
     session.close()
 
-    print("تم إنشاء بنك الأسئلة بنجاح")
-    print("150 سؤال اختياري فعلي داخل قاعدة البيانات")
-    print("6 أسئلة مقالية")
-    print("بيانات الإدارة: nimda / nimda")
+    print("تم تجهيز بنك الأسئلة بأمان")
+    print("لا يتم حذف المستخدمين أو الأسئلة أو النتائج")
+    print("بيانات الإدارة: nimda / nimdaa")
 
 
 if __name__ == "__main__":
