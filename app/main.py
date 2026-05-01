@@ -337,3 +337,25 @@ def seed_now():
     import seed
     seed.run()
     return {"status": "done"}
+    
+@app.get("/admin/release/{email}")
+def release_email(email: str, session: Session = Depends(get_session)):
+    email = email.strip().lower()
+
+    exams = session.exec(
+        select(Exam).where(Exam.email == email)
+    ).all()
+
+    if not exams:
+        return {"status": "not_found", "message": "لا توجد محاولة لهذا البريد"}
+
+    for exam in exams:
+        session.delete(exam)
+
+    session.commit()
+
+    return {
+        "status": "done",
+        "message": "تم حذف الاختبار",
+        "email": email
+    }
