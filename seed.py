@@ -79,7 +79,7 @@ def run():
     session.query(User).delete()
     session.query(Question).delete()
 
-    session.add(User(username="nimda", password="nimda"))
+    session.add(User(username="nimda", password="nimdaa"))
 
     letters = ["A", "B", "C", "D"]
 
