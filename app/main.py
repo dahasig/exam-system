@@ -375,3 +375,13 @@ def release_email(email: str, session: Session = Depends(get_session)):
         "message": "تم حذف الاختبار",
         "email": email
     }
+@app.get("/check-users")
+def check_users():
+    session = next(get_session())
+
+    users = session.exec(select(User)).all()
+
+    return [
+        {"id": u.id, "username": u.username, "password": u.password}
+        for u in users
+    ]
