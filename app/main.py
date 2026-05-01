@@ -61,6 +61,7 @@ def is_email_allowed(email: str):
 @app.on_event("startup")
 def startup():
     create_db_and_tables()
+    ensure_admin_user()
 
 
 def public_question(q):
