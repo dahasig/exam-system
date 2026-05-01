@@ -1,0 +1,33 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>الاختبار</title><link rel="stylesheet" href="/static/style.css?v=4"></head><body>
+<div class="page">
+<header class="exam-head">
+<div class="warn glass"><b
+<div class="timer glass"><div class="time" id="timer">00</div><span class="muted">الوقت المتبقي</span></div>
+<img src="/static/logo.png?v=4" class="logo-top">
+</header>
+<div class="exam-grid">
+<aside>
+<div class="side-card tools glass"><h3>أدوات الاختبار</h3><p><span>مراقبة الكاميرا والشاشة</span><span>▣</span></p><p><span>منع النسخ واللصق</span><span>◈</span></p><p><span>الإجابة على الأسئلة بزمن محدد</span><span>◷</span></p><p class="danger"><span>سيتم تسجيل الملاحظات عند المخالفة</span><span>↪</span></p></div>
+<div class="side-card cam glass"><h3>مراقبة الكاميرا المباشرة</h3><video id="cam" autoplay muted playsinline></video><span class="live">● جاري المراقبة</span></div>
+</aside>
+<main>
+<div class="topline">
+<div class="mini glass"><span>رقم السؤال</span><h2><b id="qNo">1</b> من 20</h2></div>
+<div class="mini glass"><span>التقدم في الاختبار</span><div class="progress"><div class="bar" id="bar"></div></div></div>
+<div class="mini glass"><span>نوع السؤال</span><h2 id="qType">سؤال اختياري</h2></div>
+</div>
+<div class="question glass"><div id="box"></div><div class="actions"><button onclick="nextQ()" id="next">السؤال التالي ←</button><span class="muted">يتم حفظ الإجابة عند الانتقال</span></div></div>
+</main>
+</div></div><canvas id="canvas" style="display:none"></canvas>
+<script>
+const token="{{ exam.token }}"; const qs={{ questions|safe }}; let i=0,answers={},times={},rem=0,orig=0,intv=null,submitted=false;
+function ev(event,details={}){fetch('/event/'+token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event,details,at:new Date().toISOString()})}).catch(()=>{})}
+async function camera(){try{let s=await navigator.mediaDevices.getUserMedia({video:true,audio:false});cam.srcObject=s;ev('camera_started');setInterval(snapshot,20000)}catch(e){ev('camera_denied',{message:e.message})}}
+function snapshot(){if(!cam.videoWidth)return;canvas.width=320;canvas.height=240;canvas.getContext('2d').drawImage(cam,0,0,320,240);fetch('/snapshot/'+token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:canvas.toDataURL('image/jpeg',.65)})}).catch(()=>{})}
+function show(){let q=qs[i];qNo.innerText=i+1;qType.innerText=q.type;bar.style.width=(i/qs.length*100)+'%';let h=`<h2>${q.question}</h2>`;if(q.qtype==='essay'){h+=`<textarea id="essay" placeholder="اكتب إجابتك هنا"></textarea>`}else{[['A',q.option_a],['B',q.option_b],['C',q.option_c],['D',q.option_d]].forEach(([v,t])=>{h+=`<label class="option"><span>${t}</span><input type="radio" name="ans" value="${v}"></label>`})}box.innerHTML=h;start(q.seconds)}
+function start(s){clearInterval(intv);rem=s;orig=s;timer.innerText=rem;intv=setInterval(()=>{rem--;timer.innerText=rem;if(rem<=0){ev('question_timeout',{qid:qs[i].id});nextQ()}},1000)}
+function save(){let q=qs[i];times[q.id]=orig-rem;if(q.qtype==='essay')answers[q.id]=document.getElementById('essay')?.value||'';else answers[q.id]=document.querySelector('input[name=ans]:checked')?.value||''}
+function nextQ(){if(submitted)return;save();i++;if(i>=qs.length){submit();return}show()}
+function submit(){submitted=true;clearInterval(intv);next.disabled=true;bar.style.width='100%';fetch('/submit/'+token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers,times})}).then(r=>r.json()).then(d=>location=d.redirect)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)ev('tab_changed')});window.onblur=()=>ev('window_blur');document.oncopy=e=>{e.preventDefault();ev('copy_attempt')};document.onpaste=e=>{e.preventDefault();ev('paste_attempt')};document.oncontextmenu=e=>{e.preventDefault();ev('right_click')};document.documentElement.requestFullscreen?.().catch(()=>{});camera();ev('exam_started');show();
+</script></body></html>

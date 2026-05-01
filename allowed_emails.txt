@@ -1,0 +1,7 @@
+# ضع هنا ايميلات المرشحين المسموح لهم بالدخول
+# كل ايميل في سطر مستقل
+# مثال:
+dahasig@gmail.com
+fff@gmail.com
+ggg@gmail.com	
+mmm@gmail.com

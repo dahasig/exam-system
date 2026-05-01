@@ -1,0 +1,25 @@
+<!doctype html><html lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>منصة الاختبارات الإلكترونية</title><link rel="stylesheet" href="/static/style.css?v=4"></head><body>
+<main class="page home">
+<section class="welcome">
+<img src="/static/logo.png?v=4" class="logo-hero" alt="logo">
+<h1>الهيئة الملكية للجبيل وينبع</h1>
+<h2>مرحبا بك في منصة الاختبارات الإلكترونية</h2>
+<div class="features">
+<div class="feature"><div class="ico">◷</div><b>اختبار احترافي</b><span>بيئة اختبار مستقرة ومنظمة</span></div>
+<div class="feature"><div class="ico">▣</div><b>أمان متقدم</b><span>حماية البيانات والخصوصية</span></div>
+<div class="feature"><div class="ico">✓</div><b>مراقبة ذكية</b><span>متابعة الكاميرا والتبويب</span></div>
+</div>
+</section>
+<section class="login glass">
+<h2>أهلا بك</h2>
+<p class="muted">يرجى تسجيل الدخول للمتابعة</p>
+{% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+<form method="post" action="/start">
+<label>اسم المرشح</label><input name="name" required placeholder="اسم المرشح الرباعي">
+<label>البريد الإلكتروني</label><input name="email" type="email" required placeholder="البريد الإلكتروني">
+<button style="width:100%;margin-top:18px">دخول ←</button>
+</form>
+<div class="hint">بياناتك آمنة وسرية</div>
+<p style="text-align:left"><a href="/admin">دخول لوحة الادارة</a></p>
+</section>
+</main></body></html>
