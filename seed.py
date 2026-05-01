@@ -151,14 +151,71 @@ def run():
                 options[idx] = wrongs[w]
                 w += 1
 
+        def add_question(session, level, qtype, question, options=None, correct="A"):
+    existing = session.exec(
+        select(Question).where(
+            Question.question == question,
+            Question.level == level,
+            Question.qtype == qtype
+        )
+    ).first()
+
+    if existing:
+        return
+
+    options = options or ["", "", "", ""]
+    session.add(
+        Question(
+            category="support",
+            level=level,
+            qtype=qtype,
+            question=question,
+            option_a=options[0],
+            option_b=options[1],
+            option_c=options[2],
+            option_d=options[3],
+            correct_option=correct,
+        )
+    )
+
+
+def run():
+    create_db_and_tables()
+    session = next(get_session())
+
+    user = session.exec(
+        select(User).where(User.username == "nimda")
+    ).first()
+
+    if user:
+        user.password = "nimdaa"
+        session.add(user)
+    else:
+        session.add(User(username="nimda", password="nimdaa"))
+
+    letters = ["A", "B", "C", "D"]
+    half = len(TOPICS) // 2
+
+    for i in range(len(TOPICS)):
+        topic, correct_text, wrongs = TOPICS[i]
+        phrase = PHRASES[i % len(PHRASES)]
+
+        level = "medium" if i < half else "hard"
+        question = f"{phrase} {topic}؟"
+
+        correct_letter = letters[i % 4]
+        options = ["", "", "", ""]
+        options[letters.index(correct_letter)] = correct_text
+
+        w = 0
+        for idx in range(4):
+            if options[idx] == "":
+                options[idx] = wrongs[w]
+                w += 1
+
         add_question(session, level, "mcq", question, options, correct_letter)
 
     for level, q in ESSAY:
-    existing = session.exec(
-        select(Question).where(Question.question == q)
-    ).first()
-
-    if not existing:
         add_question(session, level, "essay", q)
 
     session.commit()
