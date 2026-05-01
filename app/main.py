@@ -34,6 +34,21 @@ def ensure_admin_user():
     session.close()
 
 
+def ensure_questions_bank():
+    session = next(get_session())
+
+    question_count = len(session.exec(select(Question)).all())
+
+    session.close()
+
+    if question_count < 10:
+        print("بنك الاسئلة فارغ او ناقص - سيتم تشغيل seed تلقائيا")
+        import seed
+        seed.run()
+    else:
+        print("بنك الاسئلة موجود")
+
+
 @app.middleware("http")
 async def no_cache(request: Request, call_next):
     response = await call_next(request)
@@ -65,6 +80,7 @@ def is_email_allowed(email: str):
 def startup():
     create_db_and_tables()
     ensure_admin_user()
+    ensure_questions_bank()
 
 
 def public_question(q):
@@ -369,8 +385,6 @@ def release_email(email: str, session: Session = Depends(get_session)):
         session.delete(exam)
 
     session.commit()
-    
-
 
     return {
         "status": "done",
