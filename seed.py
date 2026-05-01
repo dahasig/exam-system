@@ -58,7 +58,11 @@ ESSAY = [
 
 def add_question(session, level, qtype, question, options=None, correct="A"):
     existing = session.exec(
-        select(Question).where(Question.question == question)
+        select(Question).where(
+            Question.question == question,
+            Question.level == level,
+            Question.qtype == qtype
+        )
     ).first()
 
     if existing:
@@ -99,9 +103,13 @@ def run():
     for i in range(150):
         topic, correct_text, wrongs = TOPICS[i % len(TOPICS)]
         phrase = PHRASES[i % len(PHRASES)]
-        level = "medium" if i < 75 else "hard"
 
-        question = f"{phrase} {topic}؟"
+        if i < 75:
+            level = "medium"
+            question = f"{phrase} {topic}؟"
+        else:
+            level = "hard"
+            question = f"{phrase} {topic}؟"
 
         correct_letter = letters[i % 4]
         options = ["", "", "", ""]
