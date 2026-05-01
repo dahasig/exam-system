@@ -391,8 +391,8 @@ def release_email(email: str, session: Session = Depends(get_session)):
         "message": "تم حذف الاختبار",
         "email": email
     }
-@app.get("/force-seed")
-def force_seed():
+@app.get("/seed-now")
+def seed_now():
     import seed
     seed.run()
     return {"status": "done"}
