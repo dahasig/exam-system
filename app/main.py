@@ -391,8 +391,8 @@ def release_email(email: str, session: Session = Depends(get_session)):
         "message": "تم حذف الاختبار",
         "email": email
     }
-import os
-
-@app.get("/db-check")
-def db_check():
-    return {"db": os.getenv("DATABASE_URL")}
+@app.get("/force-seed")
+def force_seed():
+    import seed
+    seed.run()
+    return {"status": "done"}
