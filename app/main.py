@@ -328,3 +328,8 @@ def admin_exam(exam_id: int, request: Request, session: Session = Depends(get_se
         "snaps": snaps,
         "qmap": qmap
     })
+@app.get("/seed")
+def seed_now():
+    import seed
+    seed.run()
+    return {"status": "done"}
