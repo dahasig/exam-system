@@ -118,7 +118,10 @@ def add_question(session, level, qtype, question, options=None, correct="A"):
 
 def run():
     create_db_and_tables()
-    session = next(get_session())
+    
+    from sqlmodel import Session
+    from app.database import engine
+    session = Session(engine)
 
     # يحذف الأسئلة فقط لتحديث بنك الأسئلة
     # لا يحذف المستخدمين ولا نتائج الاختبارات
