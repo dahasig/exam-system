@@ -79,15 +79,14 @@ def start(request: Request, name: str = Form(...), email: str = Form(...), sessi
 
     existing_exam = session.exec(
         select(Exam).where(
-            Exam.email == email,
-            Exam.status == "submitted"
+            Exam.email == email
         )
     ).first()
 
     if existing_exam:
         return templates.TemplateResponse("home.html", {
             "request": request,
-            "error": "تم استخدام هذا البريد مسبقا ولا يمكن إعادة الاختبار"
+            "error": "تم استخدام هذا البريد مسبقا ولا يمكن الدخول للاختبار مرة أخرى"
         })
 
     mcq_medium = session.exec(
