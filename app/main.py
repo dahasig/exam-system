@@ -8,6 +8,21 @@ import secrets
 import json
 from pathlib import Path
 
+def ensure_admin_user():
+    session = next(get_session())
+
+    user = session.exec(
+        select(User).where(User.username == "nimda")
+    ).first()
+
+    if user:
+        user.password = "nimdaa"
+    else:
+        session.add(User(username="nimda", password="nimdaa"))
+
+    session.commit()
+    session.close()
+    
 from .database import create_db_and_tables, get_session
 from .models import User, Question, Exam, ExamQuestion, Answer, ProctorEvent, Snapshot
 
