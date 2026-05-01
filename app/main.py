@@ -369,6 +369,12 @@ def release_email(email: str, session: Session = Depends(get_session)):
         session.delete(exam)
 
     session.commit()
+    
+@app.get("/seed-once")
+def seed_once():
+    import seed
+    seed.run()
+    return {"status": "done", "message": "تم تجهيز بنك الاسئلة بأمان"}
 
     return {
         "status": "done",
