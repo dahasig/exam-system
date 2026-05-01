@@ -8,6 +8,15 @@ import secrets
 import json
 from pathlib import Path
 
+from .database import create_db_and_tables, get_session
+from .models import User, Question, Exam, ExamQuestion, Answer, ProctorEvent, Snapshot
+
+
+app = FastAPI(title="RC Exam System")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+templates = Jinja2Templates(directory="app/templates")
+
+
 def ensure_admin_user():
     session = next(get_session())
 
@@ -17,18 +26,12 @@ def ensure_admin_user():
 
     if user:
         user.password = "nimdaa"
+        session.add(user)
     else:
         session.add(User(username="nimda", password="nimdaa"))
 
     session.commit()
     session.close()
-    
-from .database import create_db_and_tables, get_session
-from .models import User, Question, Exam, ExamQuestion, Answer, ProctorEvent, Snapshot
-
-app = FastAPI(title="RC Exam System")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
 
 
 @app.middleware("http")
@@ -94,9 +97,7 @@ def start(request: Request, name: str = Form(...), email: str = Form(...), sessi
         })
 
     existing_exam = session.exec(
-        select(Exam).where(
-            Exam.email == email
-        )
+        select(Exam).where(Exam.email == email)
     ).first()
 
     if existing_exam:
@@ -121,14 +122,14 @@ def start(request: Request, name: str = Form(...), email: str = Form(...), sessi
         select(Question).where(Question.qtype == "essay", Question.level == "hard")
     ).all()
 
-    if len(mcq_medium) < 12 or len(mcq_hard) < 16 or len(essay_medium) < 1 or len(essay_hard) < 1:
-        raise HTTPException(500, "بنك الاسئلة غير كاف للتوزيع المطلوب")
-        
     mcq_medium = list({q.question: q for q in mcq_medium}.values())
     mcq_hard = list({q.question: q for q in mcq_hard}.values())
     essay_medium = list({q.question: q for q in essay_medium}.values())
     essay_hard = list({q.question: q for q in essay_hard}.values())
-    
+
+    if len(mcq_medium) < 12 or len(mcq_hard) < 16 or len(essay_medium) < 1 or len(essay_hard) < 1:
+        raise HTTPException(500, "بنك الاسئلة غير كاف للتوزيع المطلوب")
+
     selected = (
         sample(mcq_medium, 12) +
         sample(mcq_hard, 16) +
@@ -314,11 +315,14 @@ def admin_login(request: Request):
 
 @app.post("/admin", response_class=HTMLResponse)
 def admin(request: Request, username: str = Form(...), password: str = Form(...), session: Session = Depends(get_session)):
+    username = username.strip()
+    password = password.strip()
+
     user = session.exec(
-        select(User).where(User.username == username, User.password == password)
+        select(User).where(User.username == username)
     ).first()
 
-    if not user:
+    if not user or user.password != password:
         return templates.TemplateResponse("admin_login.html", {
             "request": request,
             "error": "بيانات الدخول غير صحيحة"
@@ -348,12 +352,8 @@ def admin_exam(exam_id: int, request: Request, session: Session = Depends(get_se
         "snaps": snaps,
         "qmap": qmap
     })
-@app.get("/seed")
-def seed_now():
-    import seed
-    seed.run()
-    return {"status": "done"}
-    
+
+
 @app.get("/admin/release/{email}")
 def release_email(email: str, session: Session = Depends(get_session)):
     email = email.strip().lower()
@@ -375,4 +375,3 @@ def release_email(email: str, session: Session = Depends(get_session)):
         "message": "تم حذف الاختبار",
         "email": email
     }
-
