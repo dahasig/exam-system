@@ -108,7 +108,12 @@ def start(request: Request, name: str = Form(...), email: str = Form(...), sessi
 
     if len(mcq_medium) < 12 or len(mcq_hard) < 16 or len(essay_medium) < 1 or len(essay_hard) < 1:
         raise HTTPException(500, "بنك الاسئلة غير كاف للتوزيع المطلوب")
-
+        
+    mcq_medium = list({q.question: q for q in mcq_medium}.values())
+    mcq_hard = list({q.question: q for q in mcq_hard}.values())
+    essay_medium = list({q.question: q for q in essay_medium}.values())
+    essay_hard = list({q.question: q for q in essay_hard}.values())
+    
     selected = (
         sample(mcq_medium, 12) +
         sample(mcq_hard, 16) +
