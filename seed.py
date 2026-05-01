@@ -1,6 +1,6 @@
 from app.database import create_db_and_tables, get_session
 from app.models import User, Question
-from sqlmodel import select
+from sqlmodel import select, delete
 
 
 TOPICS = [
@@ -331,6 +331,8 @@ def run():
 def run():
     create_db_and_tables()
     session = next(get_session())
+    session.exec(delete(Question))
+    session.commit()
 
     user = session.exec(
         select(User).where(User.username == "nimda")
