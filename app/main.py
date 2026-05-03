@@ -7,6 +7,9 @@ from random import sample, shuffle
 import secrets
 import json
 from pathlib import Path
+from fastapi.responses import StreamingResponse
+import csv
+import io
 
 from .database import create_db_and_tables, get_session
 from .models import User, Question, Exam, ExamQuestion, Answer, ProctorEvent, Snapshot
@@ -396,3 +399,54 @@ def seed_now():
     import seed
     seed.run()
     return {"status": "done"}
+    
+@app.get("/admin/export")
+def export_results(session: Session = Depends(get_session)):
+    exams = session.exec(select(Exam).order_by(Exam.id.desc())).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # عنوان الأعمدة
+    writer.writerow([
+        "Name",
+        "Email",
+        "Status",
+        "Score",
+        "Total",
+        "Essay Count",
+        "Suspicion Count",
+        "Notes"
+    ])
+
+    for exam in exams:
+        events = session.exec(
+            select(ProctorEvent).where(ProctorEvent.exam_id == exam.id)
+        ).all()
+
+        notes = " | ".join([
+            f"{event.event}"
+            for event in events
+            if event.event not in ["snapshot"]
+        ])
+
+        writer.writerow([
+            exam.name,
+            exam.email,
+            exam.status,
+            exam.score,
+            exam.total,
+            exam.essay_count,
+            exam.suspicion,
+            notes
+        ])
+
+    output.seek(0)
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": "attachment; filename=results.csv"
+        }
+    )
